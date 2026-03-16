@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticOS - Seu Agente de Viagens</title>
+    <style>
+        /* Reset e Fundo */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #scroll-container {
+            height: 500vh;
+        }
+
+        #sticky-container {
+            position: sticky;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #050505;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            max-width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            /* Nível mais baixo, no fundo */
+        }
+
+        /* O FILTRO ESCURO MAGNÍFICO (Overlay) */
+        #dark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            opacity: 0;
+            /* Começa 100% transparente */
+            transition: opacity 0.5s ease-in-out;
+            /* Transição super suave */
+            z-index: 2;
+            /* Fica em cima do canvas, mas embaixo do texto */
+            pointer-events: none;
+        }
+
+        /* Tipografia Exata - Estilo Terminal */
+        #hero-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 90%;
+            z-index: 3;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        #typewriter-text {
+            font-size: 4.5rem;
+            font-weight: 600;
+            letter-spacing: -2px;
+            text-shadow: 0px 4px 30px rgba(0, 0, 0, 1);
+            min-height: 6rem;
+            margin: 0;
+        }
+
+        #hero-description {
+            font-size: 1.25rem;
+            color: #a1a1aa;
+            max-width: 600px;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .cta-container {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
+            pointer-events: auto;
+            /* Permite cliques mesmo no hero interativo */
+        }
+
+        /* Botão Premium Estilo Webhub */
+        .btn-webhub {
+            display: inline-flex;
+            align-items: center;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 8px 8px 8px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.02em;
+        }
+
+        .btn-webhub:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-icon-circle {
+            width: 36px;
+            height: 36px;
+            background-color: #000000;
+            border-radius: 50%;
+            margin-left: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-webhub:hover .btn-icon-circle {
+            transform: rotate(45deg);
+        }
+
+        .btn-icon-circle svg {
+            width: 18px;
+            height: 18px;
+            stroke: #ffffff;
+            stroke-width: 2.5;
+        }
+
+        .typing-cursor {
+            color: #ffffff;
+        }
+
+        /* Globals & Scaffolding */
+        .content-wrapper {
+            background-color: #050505;
+            position: relative;
+            z-index: 100;
+            /* Garante que as seções fiquem em cima do Hero sticky */
+            margin-top: -100vh;
+            /* Faz as seções começarem a "cobrir" o Hero antes do final do scroll */
+            padding-bottom: 120px;
+        }
+
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 160px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 64px;
+        }
+
+        /* Typography Consistency */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: inherit;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        p {
+            margin: 0;
+            color: #a1a1aa;
+            /* Zinc 400 */
+            line-height: 1.6;
+            font-size: 1.125rem;
+        }
+
+        .section-title {
+            font-size: 4rem;
+            line-height: 1.1;
+            max-width: 800px;
+            letter-spacing: -0.03em;
+        }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Cards & Glassmorphism (High-end Apple/Stripe feel) */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* very subtle border */
+            border-radius: 20px;
+            padding: 48px;
+        }
+
+        .card-title {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .highlight {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* How It Works Split Layout */
+        .how-it-works-split {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+            /* Removido background e bordas para o efeito flutuante */
+            padding: 24px 0;
+            position: relative;
+            overflow: visible;
+        }
+
+        .spotlight-glow {
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .how-it-works-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .how-it-works-visual {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            z-index: 10;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #globe-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            background: transparent;
+            /* Sobrescreve isolamento herdado */
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            z-index: auto !important;
+            max-width: none;
+            object-fit: unset;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            position: relative;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-number {
+            font-size: 0.875rem;
+            color: #52525b;
+            font-weight: 500;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+        }
+
+        @media (min-width: 992px) {
+            .how-it-works-split {
+                flex-direction: row;
+                align-items: center;
+                padding: 64px;
+            }
+
+            .how-it-works-content {
+                flex: 1;
+                padding-right: 48px;
+            }
+
+            .how-it-works-visual {
+                flex: 1;
+                height: 600px;
+            }
+        }
+
+        /* Features */
+        .feature-card {
+            padding: 48px;
+            border-radius: 20px;
+            background-color: #0c0c0c;
+            border: 1px solid #1a1a1a;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background-color: #111111;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        /* Testimonial Stack */
+        .social-proof-stack {
+            height: 300vh;
+            position: relative;
+            background-color: #050505;
+            padding: 0;
+            max-width: none;
+        }
+
+        .stack-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #050505;
+        }
+
+        .cards-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 520px;
+            margin-top: 40px;
+        }
+
+        .stacked-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            text-align: center;
+            color: #ffffff;
+            will-change: transform, opacity;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform-origin: center center;
+        }
+
+        .testimonial-quote {
+            font-size: 1.35rem;
+            /* Aumentado para dar mais peso */
+            color: #ffffff;
+            line-height: 1.6;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 8;
+            line-clamp: 8;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+            /* Levemente mais bold */
+        }
+
+        /* CTA */
+        .final-cta {
+            align-items: center;
+            text-align: center;
+            gap: 48px;
+            padding: 200px 24px 100px;
+        }
+
+        .cta-title {
+            font-size: 5rem;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            padding: 24px 48px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1.125rem;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.03);
+            background-color: #f4f4f5;
+        }
+
+        /* Macro Section Reveal Animations - Unified Monolithic Slide-up */
+        .reveal-up {
+            opacity: 1;
+            transform: translateY(100vh);
+            background-color: #050505;
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 101;
+            will-change: transform;
+        }
+
+        .reveal-up.active {
+            transform: translateY(0);
+        }
+
+        /* Removidas animações internas para evitar atrasos e fragmentação */
+
+        /* Removidos delays internos para sincronização imediata */
+
+        .delay-1 {
+            transition-delay: 0.2s;
+        }
+
+        .delay-2 {
+            transition-delay: 0.4s;
+        }
+
+        .delay-3 {
+            transition-delay: 0.6s;
+        }
+
+        .delay-4 {
+            transition-delay: 0.8s;
+        }
+
+        @media (max-width: 768px) {
+            #typewriter-text {
+                font-size: 2.2rem;
+                letter-spacing: -1px;
+                line-height: 1.2;
+                width: 95%;
+            }
+
+            .section {
+                padding: 80px 24px;
+                gap: 48px;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+
+            .cta-title {
+                font-size: 3rem;
+            }
+
+            /* Ajustes do novo carrossel stack */
+            .cards-wrapper {
+                width: calc(100% - 48px);
+                height: 480px;
+            }
+
+            .stacked-card {
+                padding: 32px;
+            }
+
+            .testimonial-quote {
+                font-size: 1rem;
+            }
+
+            .glass,
+            .feature-card {
+                padding: 32px;
+            }
+        }
+
+        /* ==========================================
+           FOOTER - BigTech Level
+        ========================================== */
+        .site-footer {
+            position: relative;
+            z-index: 100;
+            background-color: #050505;
+            padding: 56px 24px 40px;
+            margin-top: 0;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .footer-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.08) 20%,
+                rgba(255, 255, 255, 0.12) 50%,
+                rgba(255, 255, 255, 0.08) 80%,
+                transparent 100%
+            );
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .footer-logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.18);
+            font-family: inherit;
+        }
+
+        .footer-copyright {
+            font-size: 0.8125rem;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.02em;
+            font-weight: 400;
+            line-height: 1.5;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .footer-copyright:hover {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .site-footer {
+                padding: 40px 24px 32px;
+            }
+        }
+
+        /* ==========================================
+           TOP NAVIGATION BAR (Glassmorphism)
+        ========================================== */
+        .site-nav {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 1200px;
+            padding: 12px 24px;
+            background: rgba(15, 15, 15, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links-wrapper {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link {
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 100px;
+            transition: all 0.3s ease;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-nav-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+
+        .btn-nav-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-nav-primary svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 992px) {
+            .nav-links-wrapper {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .site-nav {
+                padding: 12px 16px;
+                top: 16px;
+                width: 95%;
+            }
+        }
+    </style>
+    <!-- Three.js via ESM CDN (substitui spline-viewer) -->
+</head>
+
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="site-nav">
+        <a href="/" class="nav-brand">AgenticOS</a>
+        
+        <div class="nav-links-wrapper">
+            <div class="nav-links">
+                <a href="/" class="nav-link active">AgenticOS</a>
+                <a href="#" class="nav-link">Segurança</a>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Usando target="_blank" para abrir em nova aba do WhatsApp -->
+            <a href="https://wa.me/5531997594737?text=Quero%20uma%20passagem" target="_blank" class="btn-nav-primary">
+                Acessar IA <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="nav-icon"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+            </a>
+        </div>
+    </nav>
+
+    <div id="scroll-container">
+        <div id="sticky-container">
+            <canvas id="airplane-canvas"></canvas>
+
+            <div id="dark-overlay"></div>
+
+            <div id="hero-content">
+                <div id="typewriter-text"></div>
+                <p id="hero-description">O primeiro agente de viagens por IA focado em simplicidade. Envie um áudio,
+                    receba sua passagem. Sem senhas, sem formulários.</p>
+                <div class="cta-container">
+                    <a href="https://wa.me/5531997594737?text=Quero%20uma%20passagem" target="_blank" class="btn-webhub">
+                        Conhecer Agente
+                        <span class="btn-icon-circle">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Novo Conteúdo (Big Tech Level) -->
+    <main class="content-wrapper">
+        <!-- Problem vs Solution -->
+        <section class="section problem-solution reveal-up">
+            <h2 class="section-title">O formato antigo está quebrado.</h2>
+            <div class="grid-2">
+                <div class="card glass">
+                    <h3 class="card-title">Antes</h3>
+                    <p class="card-text">Guias infinitas abertas, taxas ocultas surgindo no pagamento, horas
+                        desperdiçadas comparando preços.</p>
+                </div>
+                <div class="card glass highlight">
+                    <h3 class="card-title">AgenticOS</h3>
+                    <p class="card-text">Envie um único áudio. Receba a melhor oferta de todas as companhias aéreas e
+                        viações em 10 segundos.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it Works -->
+        <section class="section how-it-works reveal-up">
+            <div class="how-it-works-split">
+                <div class="spotlight-glow"></div>
+                <div class="how-it-works-content">
+                    <h2 class="section-title" style="margin-bottom: 48px; font-size: 3.5rem;">Pura mágica.</h2>
+                    <div class="steps-container">
+                        <div class="step">
+                            <div class="step-number">01</div>
+                            <h3 class="step-title">Peça seu voo</h3>
+                            <p class="step-text">"Quero ir de São Paulo para Paris semana que vem, o mais barato
+                                possível."</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">02</div>
+                            <h3 class="step-title">A IA processa</h3>
+                            <p class="step-text">Análise instantânea de dezenas de operadoras e voos para encontrar
+                                exatamente o que você pediu.</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">03</div>
+                            <h3 class="step-title">Compre de uma vez</h3>
+                            <p class="step-text">As opções chegam prontas em formato interativo no chat. Escolha e pague
+                                sem redirecionamentos lentos.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="how-it-works-visual">
+                    <canvas id="globe-canvas" style="width: 100%; height: 100%; cursor: grab;"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="section features reveal-up">
+            <h2 class="section-title">A inteligência por trás da cortina.</h2>
+            <div class="grid-2">
+                <div class="feature-card">
+                    <h3 class="feature-title">Voz e Texto</h3>
+                    <p class="feature-text">Comunique-se de forma livre. O agente entende contextos complexos, das datas
+                        vagas e flexibilidades estruturais.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">Motor Unificado</h3>
+                    <p class="feature-text">Executamos buscas simultâneas nos sistemas internos de aéreas e rodoviárias
+                        em milissegundos.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">Finalização Fluida</h3>
+                    <p class="feature-text">Arquitetura de pagamentos invisível. Zero atrito da cotação à emissão do
+                        bilhete.</p>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title">Disponível 24/7</h3>
+                    <p class="feature-text">Sua agência pessoal não tem fuso horário. Sempre pronta, diretamente no
+                        WhatsApp.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social Proof (Animated Stack) -->
+        <section class="social-proof-stack reveal-up" id="testimonials-section">
+            <div class="stack-container">
+                <h2 class="section-title text-center"
+                    style="margin-bottom: 24px; text-align: center; max-width: 100%; padding: 0 24px;">Voo de primeira
+                    classe.</h2>
+                <div class="cards-wrapper" id="cards-wrapper">
+                    <!-- Cards inseridos via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="section final-cta reveal-up">
+            <h2 class="cta-title">Pronto para acelerar?</h2>
+            <a href="https://wa.me/5531997594737?text=Quero%20uma%20passagem" target="_blank" class="cta-button">Inicie no WhatsApp</a>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-divider"></div>
+            <div class="footer-brand">
+                <span class="footer-logo">AgenticOS</span>
+                <p class="footer-copyright">&copy; 2026 AgenticOS &mdash; Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById("airplane-canvas");
+        const context = canvas.getContext("2d");
+        const overlay = document.getElementById("dark-overlay");
+
+        canvas.width = 1920;
+        canvas.height = 1080;
+
+        const frameCount = 200;
+        const startFrame = 1;
+
+        const currentFrame = index => (
+            `frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`
+        );
+
+        const images = [];
+        let loadedImages = 0;
+
+        for (let i = 0; i < frameCount; i++) {
+            const img = new Image();
+            const frameNumber = i + startFrame;
+            img.src = currentFrame(frameNumber);
+            img.onload = () => {
+                loadedImages++;
+                if (loadedImages === 1) {
+                    context.drawImage(images[0], 0, 0, canvas.width, canvas.height);
+                }
+            };
+            images.push(img);
+        }
+
+        // Cache DOM elements
+        const textDisplay = document.getElementById("typewriter-text");
+        const heroDesc = document.getElementById('hero-description');
+        const ctaCont = document.querySelector('.cta-container');
+        const scrollContainer = document.getElementById('scroll-container');
+        const cardsWrapper = document.getElementById('cards-wrapper');
+        const stackSection = document.getElementById('testimonials-section');
+        
+        let scrollContainerHeight = 0;
+        let windowInnerHeight = window.innerHeight;
+        let maxHeroScroll = 0;
+        let stackSectionRect = null;
+        let stackedCards = [];
+
+        function updateMetrics() {
+            windowInnerHeight = window.innerHeight;
+            if (scrollContainer) {
+                scrollContainerHeight = scrollContainer.scrollHeight;
+                maxHeroScroll = scrollContainerHeight - windowInnerHeight;
+            }
+            if (stackSection) {
+                stackSectionRect = stackSection.getBoundingClientRect();
+               // We need the absolute top relative to document for scroll math
+               stackSectionRect = {
+                   top: stackSectionRect.top + window.scrollY,
+                   height: stackSectionRect.height
+               };
+            }
+        }
+        
+        window.addEventListener('resize', updateMetrics);
+        // Delay metrics until DOM layout stabilizes
+        setTimeout(updateMetrics, 100);
+
+        const scriptTexts = [
+            {
+                string: "Seu agente de viagens exclusivo. No WhatsApp.",
+                startIn: 0.00, peakIn: 0.15,
+                peakOut: 0.25, endOut: 0.35
+            },
+            {
+                string: "O fim das buscas infinitas.",
+                startIn: 0.40, peakIn: 0.50,
+                peakOut: 0.60, endOut: 0.70
+            },
+            {
+                string: "Emissão em segundos.",
+                startIn: 0.75, peakIn: 0.85,
+                peakOut: 1.00, endOut: 1.10
+            }
+        ];
+        let autoTypingProgress = 0;
+        let lastTime = 0;
+        
+        // Scroll State
+        let currentScrollY = window.scrollY;
+        let ticking = false;
+
+        function animateAutoType(time) {
+            if (!lastTime) lastTime = time;
+            const delta = time - lastTime;
+            lastTime = time;
+
+            if (currentScrollY < 50 && autoTypingProgress < 1) {
+                autoTypingProgress += delta / 2500;
+                if (autoTypingProgress > 1) autoTypingProgress = 1;
+                requestTick();
+                requestAnimationFrame(animateAutoType);
+            }
+        }
+        requestAnimationFrame(animateAutoType);
+
+        function processScrollAnimations() {
+            // -- 1. HERO UPDATE --
+            if (scrollContainer && maxHeroScroll > 0) {
+                let scrollFraction = currentScrollY / maxHeroScroll;
+                scrollFraction = Math.max(0, Math.min(1, scrollFraction));
+
+                const frameIndex = Math.min(
+                    frameCount - 1,
+                    Math.ceil(scrollFraction * (frameCount - 1))
+                );
+
+                if (window.lastFrameIndex !== frameIndex) {
+                    if (images[frameIndex] && images[frameIndex].complete) {
+                        context.drawImage(images[frameIndex], 0, 0, canvas.width, canvas.height);
+                        window.lastFrameIndex = frameIndex;
+                    }
+                }
+
+                let currentHTML = "";
+                let isAnyTextVisible = false;
+
+                for (let i = 0; i < scriptTexts.length; i++) {
+                    const t = scriptTexts[i];
+                    if ((scrollFraction >= t.startIn - 0.05 && scrollFraction <= t.endOut + 0.05) || (i === 0 && autoTypingProgress > 0 && scrollFraction < 0.1)) {
+                        isAnyTextVisible = true;
+                    }
+
+                    if (scrollFraction >= t.startIn && scrollFraction <= t.endOut) {
+                        let progress = 0;
+                        let isErasing = false;
+
+                        if (scrollFraction <= t.peakIn) {
+                            progress = (scrollFraction - t.startIn) / (t.peakIn - t.startIn);
+                            if (i === 0) progress = Math.max(progress, autoTypingProgress);
+                        } else if (scrollFraction >= t.peakOut) {
+                            progress = 1 - ((scrollFraction - t.peakOut) / (t.endOut - t.peakOut));
+                            isErasing = true;
+                        } else {
+                            progress = 1;
+                        }
+
+                        progress = Math.max(0, Math.min(1, progress));
+                        const charCount = progress > 0 ? Math.max(1, Math.floor(t.string.length * progress)) : 0;
+
+                        if (charCount > 0) {
+                            if (progress === 1) {
+                                currentHTML = t.string;
+                            } else if (isErasing) {
+                                const charsToRemove = t.string.length - charCount;
+                                const cursorChar = t.string.substring(charsToRemove, charsToRemove + 1);
+                                const remainingText = t.string.substring(charsToRemove + 1);
+                                currentHTML = `<span class="typing-cursor">${cursorChar}</span>${remainingText}`;
+                            } else {
+                                const typedPart = t.string.substring(0, charCount - 1);
+                                const leadingChar = t.string.substring(charCount - 1, charCount);
+                                currentHTML = `${typedPart}<span class="typing-cursor">${leadingChar}</span>`;
+                            }
+                        }
+                    }
+                }
+
+                if (textDisplay.dataset.lastHTML !== currentHTML) {
+                    textDisplay.innerHTML = currentHTML;
+                    textDisplay.dataset.lastHTML = currentHTML;
+                }
+
+                let heroVisibility = 0;
+                const t0 = scriptTexts[0];
+
+                if (scrollFraction <= t0.peakOut) {
+                    heroVisibility = Math.max(autoTypingProgress > 0.5 ? 1 : 0, scrollFraction >= t0.startIn ? 1 : 0);
+                } else if (scrollFraction > t0.peakOut && scrollFraction <= t0.endOut) {
+                    heroVisibility = 1 - ((scrollFraction - t0.peakOut) / (t0.endOut - t0.peakOut));
+                }
+
+                heroVisibility = Math.max(0, Math.min(1, heroVisibility));
+
+                if (window.lastHeroVisibility !== heroVisibility) {
+                    if (heroDesc && ctaCont) {
+                        heroDesc.style.opacity = heroVisibility;
+                        heroDesc.style.transform = `translateY(${(1 - heroVisibility) * 20}px)`;
+                        heroDesc.style.pointerEvents = heroVisibility > 0.1 ? "auto" : "none";
+
+                        ctaCont.style.opacity = heroVisibility;
+                        ctaCont.style.transform = `translateY(${(1 - heroVisibility) * 20}px)`;
+                        ctaCont.style.pointerEvents = heroVisibility > 0.1 ? "auto" : "none";
+                    }
+                    window.lastHeroVisibility = heroVisibility;
+                }
+
+                const checkOverlayOpacity = isAnyTextVisible ? "0.34" : "0";
+                if (window.lastOverlayOpacity !== checkOverlayOpacity) {
+                    overlay.style.opacity = checkOverlayOpacity;
+                    window.lastOverlayOpacity = checkOverlayOpacity;
+                }
+            }
+
+            // -- 2. TESTIMONIALS STACK UPDATE --
+            if (stackSectionRect && stackedCards.length > 0) {
+                // Calculate distance from top of screen to the section
+                const sectionTopOffset = stackSectionRect.top - currentScrollY;
+                const maxStackScroll = stackSectionRect.height - windowInnerHeight;
+                
+                // Only process if it's anywhere near the viewport
+                if (sectionTopOffset < windowInnerHeight && sectionTopOffset > -stackSectionRect.height) {
+                    let progress = -sectionTopOffset / maxStackScroll;
+                    progress = Math.max(0, Math.min(1, progress));
+
+                    const arrayLength = stackedCards.length;
+
+                    stackedCards.forEach((card, index) => {
+                        let relProgress = (progress * arrayLength) - index;
+                        const baseRotation = (index % 2 === 0 ? 1 : -1) * 3;
+
+                        let newOpacity = 1;
+                        let newTransform = "";
+
+                        if (relProgress > 1) {
+                            newOpacity = 0;
+                            newTransform = `translateY(-150%) scale(1) rotate(0deg)`;
+                        } else if (relProgress > 0) {
+                            const slideOut = relProgress;
+                            const yPercent = slideOut * -150;
+                            newOpacity = 1 - slideOut;
+                            newTransform = `translateY(${yPercent}%) scale(1) rotate(${baseRotation * slideOut}deg)`;
+                        } else {
+                            const depth = Math.abs(relProgress);
+                            const scale = Math.max(0, 1 - (depth * 0.08));
+                            newOpacity = Math.max(0, 1 - (depth * 0.2));
+                            newTransform = `translateY(${depth * 35}px) scale(${scale}) rotate(${baseRotation * depth}deg)`;
+                        }
+
+                        if (card.dataset.lastOpacity !== String(newOpacity) || card.dataset.lastTransform !== newTransform) {
+                            card.style.opacity = newOpacity;
+                            card.style.transform = newTransform;
+                            card.dataset.lastOpacity = String(newOpacity);
+                            card.dataset.lastTransform = newTransform;
+                        }
+                    });
+                }
+            }
+            
+            ticking = false;
+        }
+
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(processScrollAnimations);
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            currentScrollY = window.scrollY;
+            requestTick();
+        }, { passive: true });
+
+        // Inicialização
+        requestTick();
+
+        // ==========================================
+        // TESTIMONIALS ANIMATED STACK LOGIC
+        // ==========================================
+        const reviews = [
+            {
+                name: 'Marcelo',
+                role: 'CEO, São Paulo - SP',
+                avatar: 'images/avatars/marcelo.jpg',
+                text: '"Mandei uma mensagem de voz no trânsito. Em três minutos estava com meu bilhete corporativo no e-mail. Inexplicavelmente superior a qualquer buscador tradicional."'
+            },
+            {
+                name: 'Jessica',
+                role: 'Arquiteta, Rio de Janeiro - RJ',
+                avatar: 'images/avatars/jessica.jpg',
+                text: '"O formato da apresentação no WhatsApp com o carrossel de opções é perfeito. O AgenticOS entendeu até minhas datas flexíveis e me deu o link certinho pro pagamento."'
+            },
+            {
+                name: 'Carlos',
+                role: 'Diretor de Vendas, BH - MG',
+                avatar: 'images/avatars/carlos.jpg',
+                text: '"A economia de tempo é absurda. Sem taxas escondidas, sem dezenas de abas abertas. A resolução de uma viagem inteira acontece no aplicativo que eu mais uso o dia todo."'
+            },
+            {
+                name: 'Ana',
+                role: 'Consultora, Curitiba - PR',
+                avatar: 'images/avatars/ana.jpg',
+                text: '"Testei todas as soluções do mercado, mas a fluidez e a ausência de redirecionamentos do AgenticOS colocou a barra lá no alto. Emissão invisível e instantânea."'
+            }
+        ];
+
+        if (cardsWrapper) {
+            reviews.forEach((review) => {
+                const card = document.createElement('div');
+                card.className = 'stacked-card glass'; // Design premium
+
+                card.innerHTML = `
+                    <p class="testimonial-quote">${review.text}</p>
+                `;
+                cardsWrapper.appendChild(card);
+            });
+            
+            stackedCards = document.querySelectorAll('.stacked-card');
+            const arrayLength = stackedCards.length;
+            stackedCards.forEach((card, index) => {
+                card.style.zIndex = arrayLength - index;
+            });
+            
+            updateMetrics();
+            requestTick();
+        }
+
+        window.dispatchEvent(new Event('scroll'));
+
+        // ==========================================
+        // ADVANCED REVEAL ANIMATIONS (Intersection Observer)
+        // ==========================================
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px 0px 0px 0px',
+            threshold: 0.01 // Dispara imediatamente ao tocar o fundo da tela
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Pequeno delay para garantir que o navegador processe o estado inicial
+                    setTimeout(() => {
+                        entry.target.classList.add('active');
+                    }, 50);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Spline removido — Three.js renderizado via script type=module abaixo
+
+    </script>
+
+    <!-- ==========================================
+         INTERACTIVE GLOBE — Vanilla JS Port 
+    =========================================== -->
+    <script>
+    (() => {
+        const canvas = document.getElementById('globe-canvas');
+        if (!canvas) throw new Error('globe-canvas not found');
+        const ctx = canvas.getContext('2d');
+
+        // Configuração do Globo (Props convertidas do React)
+        const globeConfig = {
+            dotColor: "rgba(100, 180, 255, ALPHA)",
+            arcColor: "rgba(100, 180, 255, 0.5)",
+            markerColor: "rgba(100, 220, 255, 1)",
+            autoRotateSpeed: 0.002,
+        };
+
+        const DEFAULT_MARKERS = [
+            { lat: 37.78, lng: -122.42, label: "San Francisco" },
+            { lat: 51.51, lng: -0.13, label: "London" },
+            { lat: 35.68, lng: 139.69, label: "Tokyo" },
+            { lat: -33.87, lng: 151.21, label: "Sydney" },
+            { lat: 1.35, lng: 103.82, label: "Singapore" },
+            { lat: 55.76, lng: 37.62, label: "Moscow" },
+            { lat: -23.55, lng: -46.63, label: "São Paulo" },
+            { lat: 19.43, lng: -99.13, label: "Mexico City" },
+            { lat: 28.61, lng: 77.21, label: "Delhi" },
+            { lat: 36.19, lng: 44.01, label: "Erbil" },
+        ];
+
+        const DEFAULT_CONNECTIONS = [
+            { from: [37.78, -122.42], to: [51.51, -0.13] },
+            { from: [51.51, -0.13], to: [35.68, 139.69] },
+            { from: [35.68, 139.69], to: [-33.87, 151.21] },
+            { from: [37.78, -122.42], to: [1.35, 103.82] },
+            { from: [51.51, -0.13], to: [28.61, 77.21] },
+            { from: [37.78, -122.42], to: [-23.55, -46.63] },
+            { from: [1.35, 103.82], to: [-33.87, 151.21] },
+            { from: [28.61, 77.21], to: [36.19, 44.01] },
+            { from: [51.51, -0.13], to: [36.19, 44.01] },
+        ];
+
+        // Utils de Matemática e Projeção 3D -> 2D
+        function latLngToXYZ(lat, lng, radius) {
+            const phi = ((90 - lat) * Math.PI) / 180;
+            const theta = ((lng + 180) * Math.PI) / 180;
+            return [
+                -(radius * Math.sin(phi) * Math.cos(theta)),
+                radius * Math.cos(phi),
+                radius * Math.sin(phi) * Math.sin(theta),
+            ];
+        }
+
+        function rotateY(x, y, z, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return [x * cos + z * sin, y, -x * sin + z * cos];
+        }
+
+        function rotateX(x, y, z, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return [x, y * cos - z * sin, y * sin + z * cos];
+        }
+
+        function project(x, y, z, cx, cy, fov) {
+            const scale = fov / (fov + z);
+            return [x * scale + cx, y * scale + cy, z];
+        }
+
+        // Estado Global da Animação
+        let rotY = 0.4;
+        let rotX = 0.3;
+        let drag = { active: false, startX: 0, startY: 0, startRotY: 0, startRotX: 0 };
+        let time = 0;
+        
+        // Gerar pontos do globo (aproximação da malha usando Fibonacci sphere)
+        const dots = [];
+        const numDots = 1200;
+        const goldenRatio = (1 + Math.sqrt(5)) / 2;
+        for (let i = 0; i < numDots; i++) {
+            const theta = (2 * Math.PI * i) / goldenRatio;
+            const phi = Math.acos(1 - (2 * (i + 0.5)) / numDots);
+            const x = Math.cos(theta) * Math.sin(phi);
+            const y = Math.cos(phi);
+            const z = Math.sin(theta) * Math.sin(phi);
+            dots.push([x, y, z]);
+        }
+
+        let isGlobeVisible = false;
+        
+        // Setup observer to pause rendering when off-screen
+        const globeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                isGlobeVisible = entry.isIntersecting;
+                if (isGlobeVisible) {
+                    // Restart render loop if it's visible again
+                    requestAnimationFrame(draw);
+                }
+            });
+        }, { threshold: 0.05 }); // Start rendering just before it enters view
+        
+        const globeContainer = canvas.parentElement;
+        if(globeContainer) {
+            globeObserver.observe(globeContainer);
+        }
+
+        function draw() {
+            if (!isGlobeVisible) return; // Pause entire CPU loop
+
+            const container = canvas.parentElement;
+            if(!container) {
+                requestAnimationFrame(draw);
+                return;
+            }
+            
+            const dpr = window.devicePixelRatio || 1;
+            // Floor os valores para evitar loops infinitos de resize onde .width é integer e w*dpr é float
+            const w = Math.floor(container.clientWidth || container.offsetWidth || 500);
+            const h = Math.floor(container.clientHeight || container.offsetHeight || 500);
+            
+            // Recalcula canvas buffer size APENAS se mudou
+            const targetWidth = Math.floor(w * dpr);
+            const targetHeight = Math.floor(h * dpr);
+
+            if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // Reseta e aplica novo scale
+            }
+
+            const cx = w / 2;
+            const cy = h / 2;
+            const radius = Math.min(w, h) * 0.38;
+            const fov = 600;
+
+            if (!drag.active) rotY += globeConfig.autoRotateSpeed;
+            time += 0.015;
+
+            // Limpa com safety margin e clearRect
+            ctx.clearRect(0, 0, w, h);
+
+            // Outer glow
+            const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.5);
+            glowGrad.addColorStop(0, "rgba(60, 140, 255, 0.03)");
+            glowGrad.addColorStop(1, "rgba(60, 140, 255, 0)");
+            ctx.fillStyle = glowGrad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Globe outline (fundo esfumaçado)
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(100, 180, 255, 0.06)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Cache rotação para o frame
+            const ry = rotY;
+            const rx = rotX;
+
+            // 1. Draw Mesh Dots
+            for (let i = 0; i < dots.length; i++) {
+                let [x, y, z] = dots[i];
+                x *= radius;
+                y *= radius;
+                z *= radius;
+
+                [x, y, z] = rotateX(x, y, z, rx);
+                [x, y, z] = rotateY(x, y, z, ry);
+
+                if (z > 0) continue; // back-face culling (só desenha a frente)
+
+                const [sx, sy] = project(x, y, z, cx, cy, fov);
+                const depthAlpha = Math.max(0.1, 1 - (z + radius) / (2 * radius));
+                const dotSize = 1 + depthAlpha * 0.8;
+
+                ctx.beginPath();
+                ctx.arc(sx, sy, dotSize, 0, Math.PI * 2);
+                ctx.fillStyle = globeConfig.dotColor.replace("ALPHA", depthAlpha.toFixed(2));
+                ctx.fill();
+            }
+
+            // 2. Draw Connections (Arcs)
+            for (const conn of DEFAULT_CONNECTIONS) {
+                const [lat1, lng1] = conn.from;
+                const [lat2, lng2] = conn.to;
+
+                let [x1, y1, z1] = latLngToXYZ(lat1, lng1, radius);
+                let [x2, y2, z2] = latLngToXYZ(lat2, lng2, radius);
+
+                [x1, y1, z1] = rotateX(x1, y1, z1, rx);
+                [x1, y1, z1] = rotateY(x1, y1, z1, ry);
+                [x2, y2, z2] = rotateX(x2, y2, z2, rx);
+                [x2, y2, z2] = rotateY(x2, y2, z2, ry);
+
+                // Só desenha se ambas as pontas tiverem visibilidade (não totalmente atrás)
+                if (z1 > radius * 0.3 && z2 > radius * 0.3) continue;
+
+                const [sx1, sy1] = project(x1, y1, z1, cx, cy, fov);
+                const [sx2, sy2] = project(x2, y2, z2, cx, cy, fov);
+
+                // Ponto elevado no meio para formar o arco
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const midZ = (z1 + z2) / 2;
+                const midLen = Math.sqrt(midX * midX + midY * midY + midZ * midZ);
+                const arcHeight = radius * 1.25;
+                const elevX = (midX / midLen) * arcHeight;
+                const elevY = (midY / midLen) * arcHeight;
+                const elevZ = (midZ / midLen) * arcHeight;
+                const [scx, scy] = project(elevX, elevY, elevZ, cx, cy, fov);
+
+                // Desenha a linha curva
+                ctx.beginPath();
+                ctx.moveTo(sx1, sy1);
+                ctx.quadraticCurveTo(scx, scy, sx2, sy2);
+                ctx.strokeStyle = globeConfig.arcColor;
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                // Ponto viajante na curva (animação baseada no tempo)
+                const t = (Math.sin(time * 1.2 + lat1 * 0.1) + 1) / 2;
+                const tx = (1 - t) * (1 - t) * sx1 + 2 * (1 - t) * t * scx + t * t * sx2;
+                const ty = (1 - t) * (1 - t) * sy1 + 2 * (1 - t) * t * scy + t * t * sy2;
+
+                ctx.beginPath();
+                ctx.arc(tx, ty, 2, 0, Math.PI * 2);
+                ctx.fillStyle = globeConfig.markerColor;
+                ctx.fill();
+            }
+
+            // 3. Draw Markers (Cidades)
+            for (const marker of DEFAULT_MARKERS) {
+                let [x, y, z] = latLngToXYZ(marker.lat, marker.lng, radius);
+                [x, y, z] = rotateX(x, y, z, rx);
+                [x, y, z] = rotateY(x, y, z, ry);
+
+                if (z > radius * 0.1) continue;
+
+                const [sx, sy] = project(x, y, z, cx, cy, fov);
+
+                // Pulse ring animado
+                const pulse = Math.sin(time * 2 + marker.lat) * 0.5 + 0.5;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 4 + pulse * 4, 0, Math.PI * 2);
+                ctx.strokeStyle = globeConfig.markerColor.replace("1)", `${0.2 + pulse * 0.15})`);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Ponto central
+                ctx.beginPath();
+                ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = globeConfig.markerColor;
+                ctx.fill();
+
+                // Label da cidade
+                if (marker.label) {
+                    ctx.font = "10px system-ui, sans-serif";
+                    ctx.fillStyle = globeConfig.markerColor.replace("1)", "0.6)");
+                    ctx.fillText(marker.label, sx + 8, sy + 3);
+                }
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // --- Eventos de Mouse/Touch para Rotação Manual ---
+        canvas.addEventListener('pointerdown', (e) => {
+            drag = {
+                active: true,
+                startX: e.clientX,
+                startY: e.clientY,
+                startRotY: rotY,
+                startRotX: rotX,
+            };
+            canvas.style.cursor = 'grabbing';
+            canvas.setPointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!drag.active) return;
+            const dx = e.clientX - drag.startX;
+            const dy = e.clientY - drag.startY;
+            rotY = drag.startRotY + dx * 0.005;
+            rotX = Math.max(-1, Math.min(1, drag.startRotX + dy * 0.005));
+        });
+
+        const releaseDrag = () => {
+            drag.active = false;
+            canvas.style.cursor = 'grab';
+        };
+
+        canvas.addEventListener('pointerup', releaseDrag);
+        canvas.addEventListener('pointercancel', releaseDrag);
+
+        // ResizeObserver para manter resolução responsiva sem distorcer no reveal-up
+        const ro = new ResizeObserver(() => {
+            // O próprio draw já recalcula e redimensiona o width/height interno do canvas
+        });
+        ro.observe(canvas.parentElement);
+
+        // Inicia a animação
+        requestAnimationFrame(draw);
+    })();
+    </script>
+</body>
+
+</html>

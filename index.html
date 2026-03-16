@@ -20,6 +20,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: clip;
         }
 
         #scroll-container {
@@ -257,9 +258,11 @@
         .spotlight-glow {
             position: absolute;
             top: -50%;
-            left: -20%;
+            left: 50%;
             width: 140%;
+            max-width: 100vw;
             height: 140%;
+            transform: translateX(-50%);
             background: radial-gradient(circle at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;

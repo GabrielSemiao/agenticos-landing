@@ -253,7 +253,7 @@
             display: flex;
             flex-direction: column;
             gap: 0; 
-            padding-bottom: 50vh; /* Espaço para o scroll continuar fluindo */
+            padding-bottom: 150vh; /* Scroll extra para que a nova seção deslize por cima */
             position: relative;
         }
 
@@ -312,14 +312,14 @@
             justify-content: center;
             padding: 48px;
             border-radius: 24px;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
             backdrop-filter: blur(25px) saturate(180%);
             -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.2);
             overflow: hidden;
         }
 
@@ -363,13 +363,13 @@
             position: absolute;
             inset: 0;
             background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 1px, transparent 1px),
-                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.04) 1px, transparent 1px),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.03) 1px, transparent 1px);
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 1px, transparent 1px),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.4) 1px, transparent 1px),
+                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.5) 1px, transparent 1px);
             background-size: 30px 30px, 25px 25px, 35px 35px;
             pointer-events: none;
             border-radius: 24px;
-            opacity: 0.8;
+            opacity: 0.5;
             z-index: 1;
         }
 
@@ -383,11 +383,12 @@
             margin-bottom: 24px;
             font-weight: 600;
             letter-spacing: -0.02em;
+            color: #050505;
         }
 
         .gsap-card-text {
             font-size: 1.25rem;
-            color: #a1a1aa;
+            color: #52525b;
             line-height: 1.6;
             max-width: 600px;
         }
@@ -931,10 +932,13 @@
     </div>
 
     <!-- Novo Conteúdo (Big Tech Level) -->
-    <main class="content-wrapper">
+    <main class="content-wrapper" style="background-color: transparent; padding-bottom: 0;">
+        <!-- Container Secundário Claro para Slide Effect -->
+    </main>
+    <div class="content-wrapper light-section" style="position: relative; z-index: 101; background-color: #E5E2FE; color: #050505;">
         <!-- Problem vs Solution: GSAP Stacking Cards -->
-        <section class="section problem-solution" style="padding-bottom: 0;">
-            <h2 class="section-title reveal-fade" style="text-align: center; margin: 0 auto 48px auto;">O formato antigo está quebrado.</h2>
+        <section class="section problem-solution" style="padding-bottom: 0; padding-top: 100px;">
+            <h2 class="section-title reveal-fade" style="text-align: center; margin: 0 auto 48px auto; color: #050505;">O formato antigo está quebrado.</h2>
             
             <div class="gsap-stack-container">
                 <!-- Card 1: Antes -->
@@ -980,7 +984,10 @@
                 </div>
             </div>
         </section>
+    </div>
 
+    <!-- Content Wrapper Escuro para causar o overlap final -->
+    <div class="content-wrapper" style="position: relative; z-index: 102; padding-top: 24px; background-color: #050505; color: #ffffff;">
         <!-- How it Works -->
         <section class="section how-it-works reveal-up">
             <div class="how-it-works-split">
@@ -1058,7 +1065,7 @@
             <h2 class="cta-title">Pronto para acelerar?</h2>
             <a href="https://wa.me/5531997594737?text=Quero%20uma%20passagem" target="_blank" class="cta-button">Inicie no WhatsApp</a>
         </section>
-    </main>
+    </div>
 
     <!-- Footer -->
     <footer class="site-footer">

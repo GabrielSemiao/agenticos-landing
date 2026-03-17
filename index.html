@@ -770,6 +770,24 @@
         }
 
         /* ==========================================
+           MAGIC TYPEWRITER CURSOR
+        ========================================== */
+        .magic-cursor-blink {
+            display: inline-block;
+            width: 4px;
+            height: 1em;
+            background-color: #ffffff;
+            margin-left: 4px;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* ==========================================
            TOP NAVIGATION BAR (Glassmorphism)
         ========================================== */
         .site-nav {
@@ -990,25 +1008,22 @@
             <div class="how-it-works-split">
                 <div class="spotlight-glow"></div>
                 <div class="how-it-works-content">
-                    <h2 class="section-title reveal-fade" style="margin-bottom: 48px; font-size: 3.5rem;">Pura mágica.</h2>
+                    <h2 class="section-title typewriter-target" style="margin-bottom: 48px; font-size: 3.5rem; min-height: 4.2rem;">Pura mágica.</h2>
                     <div class="steps-container">
                         <div class="step">
                             <div class="step-number">01</div>
-                            <h3 class="step-title">Peça seu voo</h3>
-                            <p class="step-text">"Quero ir de São Paulo para Paris semana que vem, o mais barato
-                                possível."</p>
+                            <h3 class="step-title typewriter-target" style="min-height: 28px;">Peça seu voo</h3>
+                            <p class="step-text typewriter-target" style="min-height: 72px;">"Quero ir de São Paulo para Paris semana que vem, o mais barato possível."</p>
                         </div>
                         <div class="step">
                             <div class="step-number">02</div>
-                            <h3 class="step-title">A IA processa</h3>
-                            <p class="step-text">Análise instantânea de dezenas de operadoras e voos para encontrar
-                                exatamente o que você pediu.</p>
+                            <h3 class="step-title typewriter-target" style="min-height: 28px;">A IA processa</h3>
+                            <p class="step-text typewriter-target" style="min-height: 72px;">Análise instantânea de dezenas de operadoras e voos para encontrar exatamente o que você pediu.</p>
                         </div>
                         <div class="step">
                             <div class="step-number">03</div>
-                            <h3 class="step-title">Compre de uma vez</h3>
-                            <p class="step-text">As opções chegam prontas em formato interativo no chat. Escolha e pague
-                                sem redirecionamentos lentos.</p>
+                            <h3 class="step-title typewriter-target" style="min-height: 28px;">Compre de uma vez</h3>
+                            <p class="step-text typewriter-target" style="min-height: 72px;">As opções chegam prontas em formato interativo no chat. Escolha e pague sem redirecionamentos lentos.</p>
                         </div>
                     </div>
                 </div>
@@ -1761,6 +1776,57 @@
         // Inicia a animação
         requestAnimationFrame(draw);
     })();
+        // ==========================================
+        // DYNAMIC TYPEWRITER EFFECT
+        // ==========================================
+        const typewriterElements = document.querySelectorAll('.typewriter-target');
+        
+        // Inicializar os elementos guardando o texto original e depois lipando
+        typewriterElements.forEach(el => {
+            el.dataset.magicText = el.textContent.trim();
+            el.innerHTML = '';
+            el.dataset.isTyping = "false";
+        });
+
+        const magicObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                const el = entry.target;
+                const text = el.dataset.magicText;
+                
+                if (entry.isIntersecting) {
+                    if (el.dataset.isTyping === "false") {
+                        el.dataset.isTyping = "true";
+                        let i = 0;
+                        
+                        // Limpa pra recomeçar (caso venha do reset)
+                        el.innerHTML = '<span class="magic-cursor-blink"></span>';
+                        
+                        function type() {
+                            // Proteção: Se saiu da tela enquanto ainda digitava, aborta.
+                            if (el.dataset.isTyping === "false") return;
+                                
+                            if (i < text.length) {
+                                el.innerHTML = text.substring(0, i + 1) + '<span class="magic-cursor-blink"></span>';
+                                i++;
+                                setTimeout(type, Math.random() * 40 + 30); // Ligeiramente mais rápido (30-70ms)
+                            }
+                        }
+                        
+                        // Pequeno atraso aleatório antes de iniciar a digitação pra simular humanos autônomos
+                        setTimeout(type, Math.random() * 200);
+                    }
+                } else {
+                    // Saiu da tela
+                    el.dataset.isTyping = "false";
+                    el.innerHTML = ''; // Reseta tudo pra permitir o wow factor de novo
+                }
+            });
+        }, {
+            threshold: 0.8 // Dispara apenas quando 80% do bloco entra na tela (evita digitação prematura)
+        });
+
+        typewriterElements.forEach(el => magicObserver.observe(el));
+
     </script>
 </body>
 

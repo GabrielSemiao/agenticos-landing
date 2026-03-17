@@ -253,8 +253,7 @@
             display: flex;
             flex-direction: column;
             gap: 0;
-            padding-bottom: 150vh;
-            /* Scroll extra para que a nova seção deslize por cima */
+            padding-bottom: 100vh; /* Espaço para o curtain de Seção 3 após os dois cards */
             position: relative;
         }
 
@@ -792,6 +791,47 @@
         }
 
         /* ==========================================
+           IOS SPINNER (Vanilla CSS Port)
+        ========================================== */
+        .ios-spinner {
+            position: relative;
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+        }
+
+        .spinner-blade {
+            position: absolute;
+            height: 24%;
+            width: 8%;
+            background-color: #050505;
+            border-radius: 2px;
+            animation: spinner-blade 1s linear infinite;
+            will-change: opacity;
+            top: 38%;
+            left: 46%;
+        }
+
+        .spinner-blade:nth-child(1) { transform: rotate(0deg) translateY(-130%); animation-delay: -1.667s; }
+        .spinner-blade:nth-child(2) { transform: rotate(30deg) translateY(-130%); animation-delay: -1.583s; }
+        .spinner-blade:nth-child(3) { transform: rotate(60deg) translateY(-130%); animation-delay: -1.5s; }
+        .spinner-blade:nth-child(4) { transform: rotate(90deg) translateY(-130%); animation-delay: -1.417s; }
+        .spinner-blade:nth-child(5) { transform: rotate(120deg) translateY(-130%); animation-delay: -1.333s; }
+        .spinner-blade:nth-child(6) { transform: rotate(150deg) translateY(-130%); animation-delay: -1.25s; }
+        .spinner-blade:nth-child(7) { transform: rotate(180deg) translateY(-130%); animation-delay: -1.167s; }
+        .spinner-blade:nth-child(8) { transform: rotate(210deg) translateY(-130%); animation-delay: -1.083s; }
+        .spinner-blade:nth-child(9) { transform: rotate(240deg) translateY(-130%); animation-delay: -1s; }
+        .spinner-blade:nth-child(10) { transform: rotate(270deg) translateY(-130%); animation-delay: -0.917s; }
+        .spinner-blade:nth-child(11) { transform: rotate(300deg) translateY(-130%); animation-delay: -0.833s; }
+        .spinner-blade:nth-child(12) { transform: rotate(330deg) translateY(-130%); animation-delay: -0.75s; }
+
+        @keyframes spinner-blade {
+            0% { opacity: 0.85; }
+            50% { opacity: 0.25; }
+            100% { opacity: 0.25; }
+        }
+
+        /* ==========================================
            TOP NAVIGATION BAR (Glassmorphism)
         ========================================== */
         .site-nav {
@@ -959,7 +999,7 @@
 
     <!-- Seção 2: Problema vs. Solução (Light) -->
     <div
-        style="position: relative; z-index: 101; background-color: #E5E2FE; color: #050505; margin-top: -100vh; padding-bottom: 120px;">
+        style="position: relative; z-index: 101; background-color: #E5E2FE; color: #050505; margin-top: -100vh; padding-bottom: 0;">
         <!-- Problem vs Solution: GSAP Stacking Cards -->
         <section class="section problem-solution" style="padding-bottom: 0; padding-top: 100px;">
             <h2 class="section-title reveal-fade" style="text-align: center; margin: 0 auto 48px auto; color: #050505;">
@@ -980,7 +1020,23 @@
                             <div class="gsap-glass-side"></div>
                             <div class="gsap-glass-texture"></div>
                             <div class="gsap-card-content-wrapper">
-                                <h3 class="gsap-card-title">Antes</h3>
+                                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                                    <h3 class="gsap-card-title" style="margin-bottom: 0;">Antes</h3>
+                                    <div class="ios-spinner">
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                        <div class="spinner-blade"></div>
+                                    </div>
+                                </div>
                                 <p class="gsap-card-text">Guias infinitas abertas, taxas ocultas surgindo no pagamento,
                                     horas desperdiçadas saltando entre abas e comparando preços interminavelmente.</p>
                             </div>
@@ -1825,12 +1881,16 @@
                             if (i < text.length) {
                                 el.innerHTML = text.substring(0, i + 1) + '<span class="magic-cursor-blink"></span>';
                                 i++;
-                                setTimeout(type, Math.random() * 40 + 30); // Ligeiramente mais rápido (30-70ms)
+                                setTimeout(type, Math.random() * 15 + 10); // Rápido: 10-25ms por caractere
+                            } else {
+                                // Digitação concluída — remove o cursor piscante
+                                el.innerHTML = text;
+                                el.dataset.isTyping = "done";
                             }
                         }
 
-                        // Pequeno atraso aleatório antes de iniciar a digitação pra simular humanos autônomos
-                        setTimeout(type, Math.random() * 200);
+                        // Atraso inicial reduzido para parecer mais instantâneo
+                        setTimeout(type, Math.random() * 80);
                     }
                 } else {
                     // Saiu da tela
